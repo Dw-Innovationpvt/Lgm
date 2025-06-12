@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const User = require('../models/User');
 const ErrorResponse = require('../utils/errorResponse');
 
 // @desc    Create new order
@@ -25,11 +26,17 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    // Create order
+    // Get user's phone number
+    const user = await User.findById(req.user.id);
+    
+    // Create order with phone number in shipping address
     const order = await Order.create({
       user: req.user.id,
       orderItems,
-      shippingAddress,
+      shippingAddress: {
+        ...shippingAddress,
+        phone: user.phone || '' // Include user's phone number
+      },
       paymentMethod,
       itemsPrice,
       taxPrice,
@@ -136,14 +143,19 @@ exports.updateOrderToPaid = async (req, res, next) => {
       });
     }
 
-    // Update order
+    // Update order with payment details
     order.isPaid = true;
     order.paidAt = Date.now();
+    
+    // Store payment result with Razorpay details
     order.paymentResult = {
-      id: req.body.id,
-      status: req.body.status,
-      update_time: req.body.update_time,
-      email_address: req.body.payer.email_address
+      id: req.body.id || req.body.razorpay_payment_id,
+      status: req.body.status || 'completed',
+      update_time: req.body.update_time || new Date().toISOString(),
+      email_address: req.body.payer?.email_address || req.body.email || null,
+      razorpay_payment_id: req.body.razorpay_payment_id || req.body.razorpay_payment_id,
+      razorpay_order_id: req.body.razorpay_order_id || req.body.razorpay_order_id,
+      razorpay_signature: req.body.razorpay_signature || req.body.razorpay_signature
     };
 
     const updatedOrder = await order.save();

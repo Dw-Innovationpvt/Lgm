@@ -14,9 +14,17 @@ const app = express();
 
 // Basic middleware
 app.use(cors({
-  origin: ['https://dwipl.co.in', 'https://www.dwipl.co.in', 'http://localhost:5173', 'http://localhost:3000'],
+  origin: [
+    'https://dwipl.co.in',
+    'https://www.dwipl.co.in',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:4173', // Vite preview
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'Cache-Control', 'Pragma'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
   credentials: true,
   maxAge: 86400 // 24 hours
 }));
@@ -57,11 +65,11 @@ const loadRoute = (routePath, routeFile) => {
 };
 
 // Load all routes
+loadRoute('/api/auth', './routes/auth'); // Auth routes should be loaded first
 loadRoute('/api/products', './routes/products');
 loadRoute('/api/categories', './routes/categories');
 loadRoute('/api/users', './routes/users');
 loadRoute('/api/orders', './routes/orders');
-loadRoute('/api/auth', './routes/auth');
 loadRoute('/api/cart', './routes/cart');
 loadRoute('/api/payments', './routes/payments');
 loadRoute('/api/notifications', './routes/notifications');

@@ -23,7 +23,8 @@ const OrderSchema = new mongoose.Schema({
     city: { type: String, required: true },
     state: { type: String, required: true },
     postalCode: { type: String, required: true },
-    country: { type: String, required: true }
+    country: { type: String, required: true },
+    phone: { type: String, required: true }
   },
   paymentMethod: {
     type: String,
@@ -34,7 +35,10 @@ const OrderSchema = new mongoose.Schema({
     id: String,
     status: String,
     update_time: String,
-    email_address: String
+    email_address: String,
+    razorpay_payment_id: String,
+    razorpay_order_id: String,
+    razorpay_signature: String
   },
   itemsPrice: {
     type: Number,
