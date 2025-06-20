@@ -9,6 +9,14 @@ const http = require('http');
 // Load environment variables
 dotenv.config();
 
+// Check if Brevo API key is available for email sending
+if (process.env.BREVO_API_KEY) {
+  console.log('Brevo API key found - Email service is available');
+  console.log('Sender email configured as:', process.env.BREVO_SENDER_EMAIL || 'default sender');
+} else {
+  console.warn('Brevo API key not found - Password reset emails will not work');
+}
+
 // Initialize express app
 const app = express();
 

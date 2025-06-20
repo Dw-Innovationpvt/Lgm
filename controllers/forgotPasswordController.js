@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { sendOTPEmail } = require('../utils/emailService');
+const { sendEmail } = require('../utils/brevoSimple');
 
 // @desc    Forgot password
 // @route   POST /api/auth/forgot-password
@@ -29,14 +29,29 @@ exports.forgotPassword = async (req, res, next) => {
     await user.save();
 
     // Send OTP via email
-    const emailSent = await sendOTPEmail(email, otp);
+    console.log('Attempting to send OTP email to:', email);
+    const emailSent = await sendEmail(email, otp);
+    
+    if (!emailSent) {
+      console.error('Failed to send email OTP to:', email);
+      // Still return success but with a warning
+      return res.status(200).json({
+        success: true,
+        message: 'OTP generated but email delivery may have failed',
+        emailStatus: 'failed',
+        otp: otp, // This would be removed in production
+        note: 'Email delivery failed, but you can use the OTP shown here for testing'
+      });
+    }
     
     // For development, return OTP in response
+    console.log('Email sent successfully, returning OTP in response');
     res.status(200).json({
       success: true,
-      message: 'OTP generated successfully',
+      message: 'OTP generated and sent successfully',
+      emailStatus: 'sent',
       otp: otp, // This would be removed in production
-      note: 'Check server console for email preview URL'
+      note: 'Check your email for the OTP'
     });
   } catch (err) {
     next(err);
