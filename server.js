@@ -25,6 +25,9 @@ app.use(cors({
   origin: [
     'https://dwipl.co.in',
     'https://www.dwipl.co.in',
+    'https://lgmsports.in',
+    'https://www.lgmsports.in',
+    'https://api.lgmsports.in',
     'http://localhost:5173',
     'http://localhost:3000',
     'http://localhost:4173', // Vite preview
