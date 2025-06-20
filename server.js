@@ -24,7 +24,7 @@ app.use(cors({
     'http://127.0.0.1:3000'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With', 'X-Request-ID', 'cache-control', 'pragma'],
   credentials: true,
   maxAge: 86400 // 24 hours
 }));

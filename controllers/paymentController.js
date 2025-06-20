@@ -31,9 +31,19 @@ console.log('Payment controller loaded');
 // @access  Private
 exports.createRazorpayOrder = async (req, res, next) => {
   try {
+    console.log('Creating Razorpay order with request body:', JSON.stringify(req.body));
     const { orderId } = req.body;
 
+    if (!orderId) {
+      console.error('Missing orderId in request body');
+      return res.status(400).json({
+        success: false,
+        message: 'Order ID is required'
+      });
+    }
+
     // Find order
+    console.log(`Looking up order with ID: ${orderId}`);
     const order = await Order.findById(orderId);
 
     if (!order) {
@@ -55,15 +65,38 @@ exports.createRazorpayOrder = async (req, res, next) => {
     const razorpay = getRazorpayInstance();
     
     // Create Razorpay order
-    const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(order.totalPrice * 100), // Convert to paise
+    // Ensure amount is an integer in paise (multiply by 100 and round)
+    const amountInPaise = Math.round(order.totalPrice * 100);
+    console.log(`Creating Razorpay order: ${amountInPaise} paise for order ${order._id}`);
+    
+    // Validate amount
+    if (amountInPaise <= 0) {
+      console.error(`Invalid order amount: ${amountInPaise} paise`);
+      return res.status(400).json({
+        success: false,
+        message: 'Order amount must be greater than 0'
+      });
+    }
+    
+    // Log Razorpay key being used
+    console.log(`Using Razorpay key: ${process.env.RAZORPAY_KEY_ID}`);
+    
+    // Create order with detailed parameters
+    const razorpayOrderParams = {
+      amount: amountInPaise,
       currency: 'INR',
       receipt: order._id.toString(),
       notes: {
         orderId: order._id.toString(),
-        userId: req.user.id
+        userId: req.user.id,
+        customerName: order.shippingAddress?.name || 'Customer',
+        customerEmail: order.shippingAddress?.email || 'Not provided'
       }
-    });
+    };
+    
+    console.log('Razorpay order parameters:', JSON.stringify(razorpayOrderParams));
+    
+    const razorpayOrder = await razorpay.orders.create(razorpayOrderParams);
 
     // Save Razorpay order ID to our order
     order.paymentResult = {
@@ -72,10 +105,22 @@ exports.createRazorpayOrder = async (req, res, next) => {
     };
     await order.save();
 
+    // Log the successful order creation
+    console.log('Razorpay order created successfully:', razorpayOrder.id);
+    
     res.status(200).json({
       success: true,
       order: razorpayOrder,
-      key_id: process.env.RAZORPAY_KEY_ID
+      key_id: process.env.RAZORPAY_KEY_ID,
+      // Include additional helpful information
+      orderDetails: {
+        id: razorpayOrder.id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        receipt: razorpayOrder.receipt,
+        status: razorpayOrder.status,
+        created_at: razorpayOrder.created_at
+      }
     });
   } catch (err) {
     console.error('Error creating Razorpay order:', err);

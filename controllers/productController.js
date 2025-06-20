@@ -220,7 +220,22 @@ exports.getFeaturedProducts = async (req, res, next) => {
 // @access  Public
 exports.getProductsByCategory = async (req, res, next) => {
   try {
-    const products = await Product.find({ category: req.params.categoryId })
+    // First find the category by slug
+    const Category = require('../models/Category');
+    const categorySlug = req.params.categoryId; // The parameter is actually the slug
+    
+    // Find category by slug
+    const category = await Category.findOne({ slug: categorySlug });
+    
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        error: `Category with slug ${categorySlug} not found`
+      });
+    }
+    
+    // Now find products with the category ID
+    const products = await Product.find({ category: category._id })
       .populate('category');
 
     res.status(200).json({
